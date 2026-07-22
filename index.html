@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPS Battery Management System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background-color:#f9fafb;color:#111827;}
+.dash{padding:1rem;}
+
+/* Top Bar & Nav */
+.top-bar{display:flex;flex-direction:column;gap:12px;margin-bottom:1.25rem;}
+@media(min-width: 768px){
+  .dash{padding:1.25rem 1rem;}
+  .top-bar{flex-direction:row;align-items:flex-start;justify-content:space-between;}
+}
+.plant-badge{background:#0f6e56;color:#9fe1cb;font-size:11px;padding:2px 9px;border-radius:4px;font-weight:500;display:inline-block;}
+.nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;white-space:nowrap;}
+.nb{padding:6px 12px;font-size:12px;border:0.5px solid #d1d5db;border-radius:6px;background:#fff;color:#6b7280;cursor:pointer;flex-shrink:0;}
+.nb.active{background:#1a3c5e;color:#fff;border-color:#1a3c5e;font-weight:500;}
+.nb:hover:not(.active){background:#f3f4f6;}
+
+/* KPI Grid */
+.kpi-row{display:grid;grid-template-columns:repeat(2, 1fr);gap:8px;margin-bottom:1.25rem;}
+@media(min-width: 640px){ .kpi-row{grid-template-columns:repeat(3, 1fr);} }
+@media(min-width: 1024px){ .kpi-row{grid-template-columns:repeat(6, 1fr);gap:9px;} }
+.kc{background:#fff;border-radius:8px;padding:10px;border:0.5px solid #e5e7eb;}
+.kl{font-size:11px;color:#6b7280;margin-bottom:4px;}
+.kv{font-size:18px;font-weight:600;}
+.ks{font-size:10px;color:#9ca3af;margin-top:2px;}
+
+/* Cards & Layout */
+.card{background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:12px;}
+.ct{font-size:13px;font-weight:600;color:#111827;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.grid2{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px;}
+@media(min-width: 768px){ .grid2{grid-template-columns:repeat(2, 1fr);} }
+
+.tc{display:none;}.tc.active{display:block;}
+.badge{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:500;display:inline-block;}
+.bt1{background:#fcebeb;color:#a32d2d;}.bt2{background:#faeeda;color:#854f0b;}.bt3{background:#eaf3de;color:#3b6d11;}
+.sdot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.good-d{background:#1d9e75;}.warn-d{background:#ba7517;}.bad-d{background:#e24b4a;}
+
+.filter-btn{padding:6px 12px;font-size:12px;border:0.5px solid #d1d5db;border-radius:20px;background:#fff;color:#6b7280;cursor:pointer;flex-shrink:0;}
+.filter-btn.fa{background:#0f6e56;color:#9fe1cb;border-color:#0f6e56;}
+
+.brow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:0.5px solid #f3f4f6;cursor:pointer;}
+.brow:last-child{border-bottom:none;}
+.brow:hover{background:#f9fafb;}
+.hbw{width:50px;height:4px;background:#e5e7eb;border-radius:2px;margin-top:4px;}
+.hb{height:100%;border-radius:2px;}
+
+.vbox{text-align:center;padding:8px 4px;background:#f9fafb;border-radius:6px;}
+.vval{font-size:14px;font-weight:600;}
+.vlbl{font-size:10px;color:#6b7280;margin-top:2px;}
+.vgrid{display:grid;grid-template-columns:repeat(2, 1fr);gap:8px;margin-top:10px;}
+@media(min-width: 480px){ .vgrid{grid-template-columns:repeat(3, 1fr);} }
+
+.cw{position:relative;height:200px;margin-top:8px;}
+.abanner{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:#fcebeb;border-radius:8px;margin-bottom:12px;border-left:3px solid #e24b4a;}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#f9fafb;margin-bottom:6px;}
+.rrow{display:flex;align-items:flex-start;gap:10px;padding:10px;background:#f9fafb;border-radius:8px;margin-bottom:8px;border-left:3px solid #ba7517;}
+
+.table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.cost-table, .log-table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px;}
+.cost-table th, .log-table th{background:#1a3c5e;color:#fff;padding:8px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap;}
+.cost-table td, .log-table td{padding:6px 8px;border:0.5px solid #e5e7eb;white-space:nowrap;}
+.cost-table tr:nth-child(even) td, .log-table tr:nth-child(even) td{background:#f9fafb;}
+.cost-table tfoot td{background:#d0e8fa;font-weight:600;color:#1a3c5e;border-top:1px solid #1a3c5e;}
+.cinp{padding:4px 6px;border:0.5px solid #d1d5db;border-radius:4px;background:#e8f0fe;color:#0000bb;font-size:11px;width:68px;font-family:inherit;}
+
+.exp-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.exp-btn{padding:8px 14px;font-size:12px;border:0.5px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer;flex:1 1 auto;text-align:center;}
+@media(min-width: 640px){ .exp-btn{flex:0 0 auto;} }
+.exp-btn:hover{background:#f3f4f6;}
+
+/* BHI specific */
+.bhi-ring{position:relative;width:80px;height:80px;flex-shrink:0;}
+.bhi-ring svg{transform:rotate(-90deg);}
+.bhi-ring .ring-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.bhi-score{font-size:20px;font-weight:600;line-height:1;}
+.bhi-tag{font-size:9px;color:#6b7280;margin-top:2px;}
+.bhi-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.bhi-bar-lbl{font-size:11px;color:#6b7280;width:75px;flex-shrink:0;}
+.bhi-bar-wrap{flex:1;height:6px;background:#e5e7eb;border-radius:3px;}
+.bhi-bar-fill{height:100%;border-radius:3px;}
+.bhi-bar-val{font-size:11px;font-weight:500;width:28px;text-align:right;flex-shrink:0;}
+
+/* Batch & Manage Forms */
+.bf-step{background:#f0fdf9;border:1px solid #a7f3d0;border-radius:10px;padding:12px;margin-bottom:12px;}
+.bf-step-title{font-size:13px;font-weight:600;color:#065f46;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.bf-step-num{width:20px;height:20px;background:#1d9e75;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+
+.form-grid-2{display:grid;grid-template-columns:1fr;gap:10px;}
+@media(min-width: 640px){ .form-grid-2{grid-template-columns:1fr 1fr;} }
+
+.ups-sel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;}
+.ups-sel-card{padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;text-align:center;background:#fff;}
+.ups-sel-card.selected{border-color:#1d9e75;background:#e6f7f2;}
+
+.bat-batch-table{width:100%;border-collapse:collapse;min-width:650px;}
+.bat-batch-table th{background:#1a3c5e;color:#fff;padding:8px 6px;text-align:center;font-size:11px;font-weight:500;white-space:nowrap;}
+.bat-batch-table th.left{text-align:left;}
+.bat-batch-table td{padding:6px;border-bottom:0.5px solid #e5e7eb;vertical-align:top;}
+
+.binp, .uinp{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-family:inherit;background:#fff;}
+.binp.warn{border-color:#ba7517;background:#fffbf0;}
+.binp.bad{border-color:#e24b4a;background:#fff5f5;}
+
+.vis-checks{display:flex;flex-direction:column;gap:4px;}
+.vis-check{display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;}
+.vis-check input[type=checkbox]{width:14px;height:14px;accent-color:#e24b4a;}
+
+.batch-submit, .btn-primary{width:100%;padding:10px;background:#1d9e75;color:#fff;font-size:13px;font-weight:600;border:none;border-radius:6px;cursor:pointer;}
+.batch-submit:hover, .btn-primary:hover{background:#0f6e56;}
+.btn-sec{padding:6px 12px;background:#fff;border:1px solid #d1d5db;color:#374151;border-radius:6px;cursor:pointer;font-size:12px;}
+.btn-danger{padding:6px 12px;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:6px;cursor:pointer;font-size:12px;}
+
+.inf-row{display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;padding:6px 8px;border-radius:6px;background:#f9fafb;width:100%;}
+select.mf-sel{padding:8px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111827;font-size:12px;font-family:inherit;width:100%;}
+</style>
+</head>
+<body>
+<div class="dash">
+<div class="top-bar">
+  <div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+      <span style="font-size:16px;font-weight:600;color:#111827;">UPS Battery Management</span>
+      <span class="plant-badge">Tata Steel Power Plant</span>
+    </div>
+    <p style="font-size:11px;color:#6b7280;" id="fleetSummaryText">Loading summary...</p>
+  </div>
+  <div class="nav">
+    <button class="nb active" onclick="tab('overview',this)">Overview</button>
+    <button class="nb" onclick="tab('batteries',this)">Batteries</button>
+    <button class="nb" onclick="tab('ups',this)">UPS Fleet</button>
+    <button class="nb" onclick="tab('manageups',this)">⚙️ UPS Manager</button>
+    <button class="nb" onclick="tab('maintenance',this)">Maintenance</button>
+    <button class="nb" onclick="tab('realloc',this)">Reallocation</button>
+    <button class="nb" onclick="tab('cost',this)">Costs</button>
+    <button class="nb" onclick="tab('fieldentry',this)">Field Entry</button>
+    <button class="nb" onclick="tab('log',this)">Log</button>
+  </div>
+</div>
+
+<div class="kpi-row">
+  <div class="kc"><div class="kl">Fleet avg BHI</div><div class="kv" style="color:#1d9e75" id="kpi-avg-bhi">74</div><div class="ks">Battery Health Index</div></div>
+  <div class="kc"><div class="kl">Total UPS</div><div class="kv" style="color:#1a3c5e" id="kpi-total-ups">9</div><div class="ks">Active stations</div></div>
+  <div class="kc"><div class="kl">Poor batteries</div><div class="kv" style="color:#ba7517" id="kpi-poor-bats">7</div><div class="ks">BHI below 50</div></div>
+  <div class="kc"><div class="kl">Overdue maint.</div><div class="kv" style="color:#e24b4a">3</div><div class="ks">Tier 1 critical</div></div>
+  <div class="kc"><div class="kl">Est. FY cost</div><div class="kv" style="color:#534ab7">₹2.18L</div><div class="ks">Repl. + labor</div></div>
+  <div class="kc"><div class="kl">Replace now</div><div class="kv" style="color:#e24b4a">4</div><div class="ks">B2-07,10,11,12</div></div>
+</div>
+
+<!-- OVERVIEW -->
+<div id="tc-overview" class="tc active">
+  <div class="abanner">
+    <span style="font-size:16px;flex-shrink:0;">⚠️</span>
+    <span style="font-size:12px;color:#a32d2d;line-height:1.4;"><strong>Critical:</strong> Battery B2-12 at SS-02 (Blast Furnace, UPS-07) — BHI 32, internal resistance 3.1× baseline. Schedule replacement within 7 days.</span>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="ct">BHI by substation</div><div class="cw"><canvas id="sohChart"></canvas></div></div>
+    <div class="card"><div class="ct">Health distribution · <span id="distBatCount">47</span> batteries</div><div class="cw"><canvas id="distChart"></canvas></div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="ct">Fleet BHI trend · 12 months</div><div class="cw" style="height:150px"><canvas id="trendChart"></canvas></div></div>
+    <div class="card">
+      <div class="ct">Maintenance frequency matrix</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px 10px;background:#f9fafb;border-radius:6px;border-left:3px solid #e24b4a;">
+          <span class="badge bt1">T1</span><span style="font-size:11px;">Critical load + BHI &lt; 50</span><span style="font-size:12px;font-weight:600;color:#e24b4a;">Monthly</span>
+        </div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px 10px;background:#f9fafb;border-radius:6px;border-left:3px solid #ba7517;">
+          <span class="badge bt2">T2</span><span style="font-size:11px;">Critical + BHI 50–75</span><span style="font-size:12px;font-weight:600;color:#ba7517;">Quarterly</span>
+        </div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px 10px;background:#f9fafb;border-radius:6px;border-left:3px solid #1d9e75;">
+          <span class="badge bt3">T3</span><span style="font-size:11px;">Non-critical + BHI &gt; 75</span><span style="font-size:12px;font-weight:600;color:#1d9e75;">Semi-annual</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BATTERIES -->
+<div id="tc-batteries" class="tc">
+  <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;-webkit-overflow-scrolling:touch;">
+    <button class="filter-btn fa" onclick="filterBat(this,'all')">All (<span id="cnt-all">15</span>)</button>
+    <button class="filter-btn" onclick="filterBat(this,'critical')">Poor BHI</button>
+    <button class="filter-btn" onclick="filterBat(this,'vrla')">VRLA</button>
+    <button class="filter-btn" onclick="filterBat(this,'liion')">Li-Ion</button>
+    <button class="filter-btn" onclick="filterBat(this,'ss01')">SS-01</button>
+    <button class="filter-btn" onclick="filterBat(this,'ss02')">SS-02</button>
+    <button class="filter-btn" onclick="filterBat(this,'ss03')">SS-03</button>
+  </div>
+  <div class="card"><div class="ct">Battery fleet <span style="font-size:11px;color:#9ca3af;font-weight:normal;">tap to expand BHI breakdown</span></div><div id="bat-rows"></div></div>
+  <div id="bat-detail" style="display:none;" class="card">
+    <div class="ct" id="det-title"></div>
+    <div id="det-bhi"></div>
+    <button style="margin-top:12px;font-size:12px;padding:8px 14px;border:0.5px solid #d1d5db;border-radius:6px;background:transparent;cursor:pointer;width:100%;" onclick="goField()">Log maintenance for this battery ↗</button>
+  </div>
+</div>
+
+<!-- UPS FLEET -->
+<div id="tc-ups" class="tc">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+    <p style="font-size:12px;color:#6b7280;">Active UPS Stations Overview</p>
+    <button onclick="tab('manageups', document.querySelectorAll('.nb')[3])" class="exp-btn" style="background:#1a3c5e;color:#fff;">+ Add / Modify UPS Station</button>
+  </div>
+  <div id="ups-rows"></div>
+</div>
+
+<!-- UPS MANAGER (ADD / EDIT / MODIFY BATTERIES) -->
+<div id="tc-manageups" class="tc">
+  <div class="card">
+    <div class="ct" id="ups-form-title">⚙️ Add New UPS Station</div>
+    <div class="form-grid-2">
+      <div>
+        <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">UPS Station ID</label>
+        <input id="m-ups-id" type="text" placeholder="e.g. UPS-10" class="uinp"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">Substation / Area</label>
+        <select id="m-ups-loc" class="mf-sel">
+          <option value="SS-01">SS-01 Coke Oven</option>
+          <option value="SS-02">SS-02 Blast Furnace</option>
+          <option value="SS-03">SS-03 Rolling Mill</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">Criticality Tier</label>
+        <select id="m-ups-crit" class="mf-sel">
+          <option value="t1">Tier 1 — Critical</option>
+          <option value="t2">Tier 2 — Essential</option>
+          <option value="t3">Tier 3 — Auxiliary</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">Capacity (kVA)</label>
+        <input id="m-ups-kva" type="number" placeholder="40" class="uinp"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">Backup Time (mins)</label>
+        <input id="m-ups-runtime" type="number" placeholder="45" class="uinp"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">Connected Load Description</label>
+        <input id="m-ups-load" type="text" placeholder="e.g. SCADA Backup Controls" class="uinp"/>
+      </div>
+    </div>
+
+    <!-- Battery Configuration for this UPS -->
+    <div style="margin-top:14px;padding:12px;background:#f0fdf9;border:1px solid #a7f3d0;border-radius:8px;">
+      <div style="font-size:12px;font-weight:600;color:#065f46;margin-bottom:6px;">🔋 Connected Batteries / Strings</div>
+      <p style="font-size:11px;color:#6b7280;margin-bottom:8px;">Specify total batteries attached to this UPS station:</p>
+      
+      <div class="form-grid-2">
+        <div>
+          <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">Number of Batteries</label>
+          <input id="m-ups-batcnt" type="number" min="1" max="10" value="2" class="uinp" onchange="updateBatTypeInputs()"/>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:500;display:block;margin-bottom:4px;">Battery Tech Type</label>
+          <select id="m-ups-battype" class="mf-sel">
+            <option value="VRLA">VRLA (Lead-Acid)</option>
+            <option value="Li-Ion">Li-Ion (Lithium-Ion)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button class="btn-primary" style="flex:1;" onclick="saveUPSStation()">💾 Save / Update UPS Station</button>
+      <button class="btn-sec" onclick="resetUPSForm()">Clear Form</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Existing UPS Stations &amp; Battery Configuration</div>
+    <div id="manage-ups-list"></div>
+  </div>
+</div>
+
+<!-- MAINTENANCE -->
+<div id="tc-maintenance" class="tc">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+    <p style="font-size:12px;color:#6b7280;">KPI-weighted by criticality · BHI · battery type · thermal risk</p>
+    <button onclick="alert('30-day maintenance plan generated based on critical tiers.')" class="exp-btn">Generate work order ↗</button>
+  </div>
+  <div id="maint-rows"></div>
+</div>
+
+<!-- REALLOCATION -->
+<div id="tc-realloc" class="tc">
+  <div class="card">
+    <div class="ct">Annual reallocation plan — FY 2026</div>
+    <div id="realloc-rows"></div>
+    <div style="margin-top:12px;padding:11px;background:#f9fafb;border-radius:8px;">
+      <p style="font-size:11px;color:#6b7280;line-height:1.6;"><strong style="color:#111827;">Scoring:</strong> BHI (40%) · type compatibility (20%) · thermal zone (20%) · criticality delta (20%). Batteries within ±8 BHI points grouped together. Tier 1 UPS always retain highest-BHI batteries.</p>
+    </div>
+  </div>
+</div>
+
+<!-- COST -->
+<div id="tc-cost" class="tc">
+  <div class="exp-bar">
+    <button class="exp-btn" onclick="exportCostCSV()">⬇ Export cost CSV</button>
+    <button class="exp-btn" onclick="exportFullXLSX()">⬇ Export full Excel</button>
+  </div>
+  <div class="card">
+    <div class="ct">Replacement &amp; labor cost tracker <span style="font-size:10px;color:#9ca3af;font-weight:normal;">edit blue cells</span></div>
+    <div class="table-responsive">
+      <table class="cost-table">
+        <thead><tr><th>Battery</th><th>Loc</th><th>Type</th><th>Unit Cost (₹)</th><th>Repl.</th><th>Repl. Cost</th><th>Visits</th><th>Labor/Visit</th><th>Total Labor</th><th style="background:#0f6e56;">Total Cost</th></tr></thead>
+        <tbody id="costBody"></tbody>
+        <tfoot><tr><td colspan="5">TOTAL</td><td id="totR"></td><td></td><td></td><td id="totL"></td><td id="totT" style="color:#0f6e56;font-size:12px;"></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="ct">Cost by substation</div><div class="cw"><canvas id="costChart"></canvas></div></div>
+    <div class="card"><div class="ct">Cost vs BHI · bubble = replacements</div><div class="cw"><canvas id="bubbleChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- FIELD ENTRY (Batch by UPS) -->
+<div id="tc-fieldentry" class="tc">
+  <div style="margin-bottom:12px;">
+    <p style="font-size:14px;font-weight:600;color:#111827;">Batch maintenance entry by UPS</p>
+    <p style="font-size:11px;color:#6b7280;margin-top:2px;">Select a UPS → fill readings for all its batteries → submit</p>
+  </div>
+
+  <div class="bf-step">
+    <div class="bf-step-title"><span class="bf-step-num">1</span> Visit details</div>
+    <div class="form-grid-2">
+      <div>
+        <label style="font-size:11px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Technician name</label>
+        <input id="f-tech" type="text" placeholder="Full name" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-family:inherit;"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Date</label>
+        <input id="f-date" type="date" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-family:inherit;"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Maintenance type</label>
+        <select id="f-type" class="mf-sel">
+          <option>Routine inspection</option>
+          <option>Corrective maintenance</option>
+          <option>Equalisation charge</option>
+          <option>Capacity test</option>
+          <option>Terminal cleaning</option>
+          <option>Battery replacement</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:500;color:#374151;display:block;margin-bottom:4px;">Charger float voltage (V)</label>
+        <input id="f-charger" type="number" step="0.1" placeholder="e.g. 54.6" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;font-family:inherit;"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="bf-step">
+    <div class="bf-step-title"><span class="bf-step-num">2</span> Select UPS</div>
+    <div class="ups-sel-grid" id="ups-selector"></div>
+  </div>
+
+  <div class="bf-step" id="step3" style="display:none;">
+    <div class="bf-step-title"><span class="bf-step-num">3</span> Battery readings — <span id="step3-ups-label"></span></div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+      <div class="inf-row"><strong>Float V/cell:</strong> VRLA 2.20–2.27V &nbsp;|&nbsp; Li-Ion 3.40–3.65V</div>
+      <div class="inf-row"><strong>Float current:</strong> &lt;2 mA/Ah = healthy</div>
+      <div class="inf-row"><strong>Int. resistance:</strong> flag if &gt;1.5× baseline</div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="bat-batch-table" id="batchTable">
+        <thead>
+          <tr>
+            <th class="left" style="width:70px;">Battery</th>
+            <th style="width:50px;">Type</th>
+            <th>Float V</th>
+            <th>Current (mA)</th>
+            <th>IR (mΩ)</th>
+            <th>Temp (°C)</th>
+            <th style="width:110px;">Visual checks</th>
+            <th style="width:60px;background:#0f6e56;">BHI</th>
+          </tr>
+        </thead>
+        <tbody id="batchBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="step4" style="display:none;">
+    <div id="f-alert" style="display:none;padding:10px;border-radius:8px;background:#fcebeb;color:#a32d2d;font-size:12px;margin-bottom:10px;"></div>
+    <div id="formSuccess" style="display:none;padding:10px;background:#e1f5ee;border-radius:8px;color:#0f6e56;font-size:12px;font-weight:500;margin-bottom:10px;">✓ All entries saved — visible in Log tab &amp; Excel export</div>
+    <div style="padding:10px;background:#f0fdf9;border:1px solid #a7f3d0;border-radius:10px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:#065f46;margin-bottom:6px;">📊 BHI Summary — <span id="summary-ups"></span></div>
+      <div id="bhi-summary-rows"></div>
+    </div>
+    <button class="batch-submit" id="submitBtn" onclick="submitBatch()">💾 &nbsp;Save all battery readings</button>
+  </div>
+</div>
+
+<!-- LOG -->
+<div id="tc-log" class="tc">
+  <div class="exp-bar">
+    <button class="exp-btn" onclick="exportLogCSV()">⬇ Export log CSV</button>
+    <button class="exp-btn" onclick="exportFullXLSX()">⬇ Export full Excel</button>
+    <span style="font-size:11px;color:#6b7280;align-self:center;" id="logCount">0 entries</span>
+  </div>
+  <div class="card">
+    <div class="ct">Maintenance log</div>
+    <div class="table-responsive" id="logContainer">
+      <p style="font-size:12px;color:#6b7280;padding:8px 0;">No entries yet. Use Field Entry tab to add records.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// DATA & LOGIC
+let batteries = [
+  {id:'B1-01',loc:'SS-01',ups:'UPS-01',type:'VRLA',cells:6,bhi:85,volt:13.6,temp:32,ir:0.9,iCurrent:18,cycles:210,lastMaint:'2026-04-10',nextDue:'2026-10-10',crit:'t3'},
+  {id:'B1-02',loc:'SS-01',ups:'UPS-01',type:'VRLA',cells:6,bhi:80,volt:13.4,temp:33,ir:1.0,iCurrent:20,cycles:240,lastMaint:'2026-04-10',nextDue:'2026-10-10',crit:'t3'},
+  {id:'B1-03',loc:'SS-01',ups:'UPS-02',type:'VRLA',cells:6,bhi:76,volt:13.2,temp:34,ir:1.2,iCurrent:26,cycles:310,lastMaint:'2026-03-15',nextDue:'2026-08-15',crit:'t2'},
+  {id:'B1-04',loc:'SS-01',ups:'UPS-02',type:'Li-Ion',cells:7,bhi:90,volt:26.1,temp:30,ir:0.4,iCurrent:8,cycles:180,lastMaint:'2026-05-01',nextDue:'2026-11-01',crit:'t2'},
+  {id:'B1-05',loc:'SS-01',ups:'UPS-03',type:'VRLA',cells:6,bhi:60,volt:12.4,temp:37,ir:1.8,iCurrent:45,cycles:480,lastMaint:'2026-01-20',nextDue:'2026-07-20',crit:'t1'},
+  {id:'B2-06',loc:'SS-02',ups:'UPS-04',type:'VRLA',cells:6,bhi:53,volt:12.0,temp:38,ir:2.1,iCurrent:58,cycles:510,lastMaint:'2025-12-10',nextDue:'2026-06-30',crit:'t1'},
+  {id:'B2-07',loc:'SS-02',ups:'UPS-04',type:'VRLA',cells:6,bhi:46,volt:11.7,temp:39,ir:2.4,iCurrent:68,cycles:560,lastMaint:'2025-11-05',nextDue:'2026-05-05',crit:'t1'},
+  {id:'B2-08',loc:'SS-02',ups:'UPS-05',type:'VRLA',cells:6,bhi:70,volt:12.9,temp:35,ir:1.4,iCurrent:35,cycles:380,lastMaint:'2026-02-28',nextDue:'2026-07-28',crit:'t2'},
+  {id:'B2-09',loc:'SS-02',ups:'UPS-05',type:'Li-Ion',cells:7,bhi:83,volt:25.8,temp:31,ir:0.5,iCurrent:12,cycles:220,lastMaint:'2026-04-20',nextDue:'2026-10-20',crit:'t2'},
+  {id:'B2-10',loc:'SS-02',ups:'UPS-06',type:'VRLA',cells:6,bhi:38,volt:11.2,temp:40,ir:2.9,iCurrent:80,cycles:620,lastMaint:'2025-10-01',nextDue:'2026-04-01',crit:'t1'},
+  {id:'B2-11',loc:'SS-02',ups:'UPS-06',type:'VRLA',cells:6,bhi:41,volt:11.4,temp:40,ir:2.7,iCurrent:75,cycles:600,lastMaint:'2025-10-01',nextDue:'2026-04-01',crit:'t1'},
+  {id:'B2-12',loc:'SS-02',ups:'UPS-07',type:'VRLA',cells:6,bhi:32,volt:11.0,temp:41,ir:3.1,iCurrent:90,cycles:660,lastMaint:'2025-09-15',nextDue:'2026-03-15',crit:'t1'},
+  {id:'B3-13',loc:'SS-03',ups:'UPS-08',type:'VRLA',cells:6,bhi:75,volt:13.1,temp:33,ir:1.3,iCurrent:30,cycles:320,lastMaint:'2026-03-01',nextDue:'2026-09-01',crit:'t2'},
+  {id:'B3-14',loc:'SS-03',ups:'UPS-08',type:'VRLA',cells:6,bhi:79,volt:13.3,temp:32,ir:1.1,iCurrent:24,cycles:290,lastMaint:'2026-03-01',nextDue:'2026-09-01',crit:'t2'},
+  {id:'B3-15',loc:'SS-03',ups:'UPS-09',type:'Li-Ion',cells:7,bhi:92,volt:26.4,temp:29,ir:0.3,iCurrent:6,cycles:150,lastMaint:'2026-05-15',nextDue:'2026-11-15',crit:'t2'},
+];
+
+let upsData = [
+  {id:'UPS-01',loc:'SS-01',load:'Coke Oven Controls',kva:40,crit:'t3',bats:['B1-01','B1-02'],runtime:45},
+  {id:'UPS-02',loc:'SS-01',load:'Instrumentation & SCADA',kva:20,crit:'t2',bats:['B1-03','B1-04'],runtime:60},
+  {id:'UPS-03',loc:'SS-01',load:'Emergency lighting',kva:10,crit:'t1',bats:['B1-05'],runtime:30},
+  {id:'UPS-04',loc:'SS-02',load:'BF Control Room',kva:80,crit:'t1',bats:['B2-06','B2-07'],runtime:22},
+  {id:'UPS-05',loc:'SS-02',load:'Cooling water system',kva:60,crit:'t2',bats:['B2-08','B2-09'],runtime:50},
+  {id:'UPS-06',loc:'SS-02',load:'Hot metal safety interlocks',kva:30,crit:'t1',bats:['B2-10','B2-11'],runtime:18},
+  {id:'UPS-07',loc:'SS-02',load:'Gas detection & venting',kva:25,crit:'t1',bats:['B2-12'],runtime:12},
+  {id:'UPS-08',loc:'SS-03',load:'Rolling mill drives',kva:50,crit:'t2',bats:['B3-13','B3-14'],runtime:55},
+  {id:'UPS-09',loc:'SS-03',load:'Finishing line controls',kva:30,crit:'t2',bats:['B3-15'],runtime:70},
+];
+
+const maintSchedule = [
+  {bat:'B2-12',loc:'SS-02 BF',type:'VRLA',crit:'t1',due:'2025-09-15',status:'over',note:'Replace — BHI 32'},
+  {bat:'B2-10 / B2-11',loc:'SS-02 BF',type:'VRLA',crit:'t1',due:'2025-10-01',status:'over',note:'Capacity test, BHI <42'},
+  {bat:'B2-07',loc:'SS-02 BF',type:'VRLA',crit:'t1',due:'2026-05-05',status:'over',note:'Equalisation charge'},
+  {bat:'B2-06',loc:'SS-02 BF',type:'VRLA',crit:'t1',due:'2026-06-30',status:'due',note:'Monthly inspection'},
+  {bat:'B1-05',loc:'SS-01 CK',type:'VRLA',crit:'t1',due:'2026-07-20',status:'due',note:'Float V & impedance test'},
+  {bat:'B2-08',loc:'SS-02 BF',type:'VRLA',crit:'t2',due:'2026-07-28',status:'due',note:'Quarterly check'},
+];
+
+const reallocs=[
+  {from:'B1-04 (SS-01, BHI 90)',to:'UPS-07 (SS-02, gas detection)',reason:'Highest BHI to critical UPS',priority:'high'},
+  {from:'B3-15 (SS-03, BHI 92)',to:'UPS-04 (SS-02, blast furnace)',reason:'Li-Ion high BHI to critical load',priority:'high'},
+  {from:'B1-03 (SS-01, BHI 76)',to:'UPS-08 (SS-03, rolling mill)',reason:'Group with B3-13 & B3-14',priority:'med'},
+];
+
+let costData=[
+  {id:'B1-05',ss:'SS-01',type:'VRLA',bhi:60,unitCost:18000,repl:0,visits:6,labor:650},
+  {id:'B2-06',ss:'SS-02',type:'VRLA',bhi:53,unitCost:18000,repl:0,visits:12,labor:650},
+  {id:'B2-07',ss:'SS-02',type:'VRLA',bhi:46,unitCost:18000,repl:1,visits:12,labor:650},
+  {id:'B2-08',ss:'SS-02',type:'VRLA',bhi:70,unitCost:18000,repl:0,visits:4,labor:650},
+  {id:'B2-09',ss:'SS-02',type:'Li-Ion',bhi:83,unitCost:42000,repl:0,visits:4,labor:850},
+  {id:'B2-10',ss:'SS-02',type:'VRLA',bhi:38,unitCost:18000,repl:1,visits:12,labor:650},
+  {id:'B2-11',ss:'SS-02',type:'VRLA',bhi:41,unitCost:18000,repl:1,visits:12,labor:650},
+  {id:'B2-12',ss:'SS-02',type:'VRLA',bhi:32,unitCost:18000,repl:1,visits:12,labor:650},
+  {id:'B3-13',ss:'SS-03',type:'VRLA',bhi:75,unitCost:18000,repl:0,visits:4,labor:650},
+  {id:'B3-14',ss:'SS-03',type:'VRLA',bhi:79,unitCost:18000,repl:0,visits:4,labor:650},
+  {id:'B3-15',ss:'SS-03',type:'Li-Ion',bhi:92,unitCost:42000,repl:0,visits:2,labor:850},
+];
+
+let maintenanceLog=[];
+let selectedUPS=null;
+let selectedBatId=null;
+let cChart=null,bChart=null;
+let editingUPSId=null;
+
+function calcBHI(volt, cells, type, ir, iCurrent, temp, visual){
+  const nomVpc = type==='Li-Ion' ? 3.50 : 2.23;
+  const vpc = cells>0 ? volt/cells : 0;
+  const vDev = Math.abs(vpc - nomVpc) / nomVpc;
+  let vScore = Math.max(0, 100 - vDev*600);
+
+  const irBase = type==='Li-Ion' ? 0.4 : 0.9;
+  const irRatio = ir/irBase;
+  let irScore = irRatio<=1 ? 100 : irRatio<=1.5 ? 100-(irRatio-1)*160 : irRatio<=2 ? 20-(irRatio-1.5)*40 : 0;
+  irScore = Math.max(0,irScore);
+
+  const iRatio = iCurrent/20;
+  let iScore = iRatio<=1 ? 100 : Math.max(0, 100-(iRatio-1)*80);
+  let tScore = temp<=35 ? 100 : temp<=38 ? 100-(temp-35)*10 : Math.max(0, 70-(temp-38)*20);
+  const vis = typeof visual==='number' ? visual : 0;
+  let visScore = 100 - vis*33;
+
+  const bhi = Math.round(vScore*0.30 + irScore*0.30 + iScore*0.20 + tScore*0.10 + visScore*0.10);
+  return {
+    bhi: Math.max(0,Math.min(100,bhi)),
+    breakdown: {voltage:Math.round(vScore), ir:Math.round(irScore), current:Math.round(iScore), temp:Math.round(tScore), visual:Math.round(visScore)}
+  };
+}
+
+function bhiColor(v){return v>=75?'#1d9e75':v>=50?'#ba7517':'#e24b4a';}
+function bhiLabel(v){return v>=75?'Good':v>=50?'Fair':'Poor';}
+function bhiRing(score, size=80){
+  const r=28; const circ=2*Math.PI*r; const fill=circ*(score/100);
+  const col=bhiColor(score);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 70 70">
+    <circle cx="35" cy="35" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="6"/>
+    <circle cx="35" cy="35" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-dasharray="${fill} ${circ}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+const sC=bhiColor;
+const fmt=(n)=>'₹'+n.toLocaleString('en-IN');
+const calcRow=(d)=>({replCost:d.unitCost*d.repl, laborCost:d.visits*d.labor});
+const batLocFull={'SS-01':'SS-01 Coke Oven','SS-02':'SS-02 Blast Furnace','SS-03':'SS-03 Rolling Mill'};
+
+function tab(name,btn){
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tc-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='cost') renderCostCharts();
+}
+
+function updateFleetStats(){
+  const totalSubstations = new Set(upsData.map(u=>u.loc)).size;
+  document.getElementById('fleetSummaryText').textContent = `24 Jun 2026 · 14:32 IST · ${totalSubstations} substations · ${batteries.length} batteries · ${upsData.length} UPS units`;
+  document.getElementById('kpi-total-ups').textContent = upsData.length;
+  document.getElementById('cnt-all').textContent = batteries.length;
+  document.getElementById('distBatCount').textContent = batteries.length;
+  
+  const avgBHI = batteries.length ? Math.round(batteries.reduce((a,b)=>a+b.bhi,0)/batteries.length) : 0;
+  document.getElementById('kpi-avg-bhi').textContent = avgBHI;
+  document.getElementById('kpi-poor-bats').textContent = batteries.filter(b=>b.bhi<50).length;
+}
+
+// ─── UPS MANAGER LOGIC ─────────────────────────────────────────────────────
+function renderManageUPSList(){
+  const cl={t1:'Tier 1',t2:'Tier 2',t3:'Tier 3'};
+  document.getElementById('manage-ups-list').innerHTML = upsData.map(u=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:0.5px solid #e5e7eb;gap:8px;flex-wrap:wrap;">
+      <div>
+        <strong style="font-size:13px;color:#111827;">${u.id}</strong> 
+        <span class="badge ${u.crit==='t1'?'bt1':u.crit==='t2'?'bt2':'bt3'}">${cl[u.crit]}</span>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px;">${u.loc} · ${u.load} · ${u.kva}kVA · ${u.bats.length} Batteries (${u.bats.join(', ')})</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-sec" onclick="editUPSStation('${u.id}')">✏️ Edit</button>
+        <button class="btn-danger" onclick="deleteUPSStation('${u.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function editUPSStation(id){
+  const u = upsData.find(x=>x.id===id);
+  if(!u) return;
+  editingUPSId = id;
+  document.getElementById('ups-form-title').textContent = `✏️ Edit UPS Station — ${u.id}`;
+  document.getElementById('m-ups-id').value = u.id;
+  document.getElementById('m-ups-id').disabled = true;
+  document.getElementById('m-ups-loc').value = u.loc;
+  document.getElementById('m-ups-crit').value = u.crit;
+  document.getElementById('m-ups-kva').value = u.kva;
+  document.getElementById('m-ups-runtime').value = u.runtime;
+  document.getElementById('m-ups-load').value = u.load;
+  document.getElementById('m-ups-batcnt').value = u.bats.length;
+  
+  const sampleBat = batteries.find(b=>b.ups===u.id);
+  if(sampleBat) document.getElementById('m-ups-battype').value = sampleBat.type;
+  
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function resetUPSForm(){
+  editingUPSId = null;
+  document.getElementById('ups-form-title').textContent = '⚙️ Add New UPS Station';
+  document.getElementById('m-ups-id').value = '';
+  document.getElementById('m-ups-id').disabled = false;
+  document.getElementById('m-ups-kva').value = '';
+  document.getElementById('m-ups-runtime').value = '';
+  document.getElementById('m-ups-load').value = '';
+  document.getElementById('m-ups-batcnt').value = '2';
+}
+
+function saveUPSStation(){
+  const uid = document.getElementById('m-ups-id').value.trim();
+  const loc = document.getElementById('m-ups-loc').value;
+  const crit = document.getElementById('m-ups-crit').value;
+  const kva = +document.getElementById('m-ups-kva').value || 30;
+  const runtime = +document.getElementById('m-ups-runtime').value || 30;
+  const load = document.getElementById('m-ups-load').value.trim() || 'Power backup';
+  const batCnt = Math.max(1, +document.getElementById('m-ups-batcnt').value || 1);
+  const batType = document.getElementById('m-ups-battype').value;
+
+  if(!uid){ alert('Please provide a UPS ID.'); return; }
+
+  let u = upsData.find(x=>x.id===uid);
+  if(!u){
+    // Add New UPS Station
+    u = {id:uid, loc, load, kva, crit, bats:[], runtime};
+    upsData.push(u);
+  } else {
+    // Modify existing UPS Station
+    u.loc = loc; u.load = load; u.kva = kva; u.crit = crit; u.runtime = runtime;
+  }
+
+  // Adjust attached batteries to match desired battery count
+  const existingBats = batteries.filter(b=>b.ups===uid);
+  if(existingBats.length < batCnt){
+    // Need to create additional battery strings
+    for(let i=existingBats.length+1; i<=batCnt; i++){
+      const newBatId = `${uid.replace('UPS-','B')}-0${i}`;
+      const newBat = {
+        id: newBatId, loc: loc, ups: uid, type: batType, cells: batType==='Li-Ion'?7:6,
+        bhi: 85, volt: batType==='Li-Ion'?26.0:13.2, temp: 30, ir: batType==='Li-Ion'?0.4:1.0,
+        iCurrent: 15, cycles: 100, lastMaint: new Date().toISOString().split('T')[0],
+        nextDue: '2026-12-31', crit: crit
+      };
+      batteries.push(newBat);
+      costData.push({id:newBatId, ss:loc, type:batType, bhi:85, unitCost:batType==='Li-Ion'?42000:18000, repl:0, visits:4, labor:650});
+    }
+  } else if(existingBats.length > batCnt){
+    // Remove extra batteries from fleet
+    const removeCount = existingBats.length - batCnt;
+    for(let i=0; i<removeCount; i++){
+      const removed = existingBats.pop();
+      batteries = batteries.filter(b=>b.id!==removed.id);
+      costData = costData.filter(c=>c.id!==removed.id);
+    }
+  }
+
+  // Sync battery details (location, type, criticality)
+  u.bats = batteries.filter(b=>b.ups===uid).map(b=>b.id);
+  batteries.filter(b=>b.ups===uid).forEach(b=>{
+    b.loc = loc; b.type = batType; b.crit = crit;
+  });
+
+  resetUPSForm();
+  refreshAllData();
+  alert(`UPS Station ${uid} saved successfully!`);
+}
+
+function deleteUPSStation(uid){
+  if(!confirm(`Are you sure you want to delete ${uid} and remove its attached batteries?`)) return;
+  
+  upsData = upsData.filter(u=>u.id!==uid);
+  const removedBatIds = batteries.filter(b=>b.ups===uid).map(b=>b.id);
+  batteries = batteries.filter(b=>b.ups!==uid);
+  costData = costData.filter(c=>!removedBatIds.includes(c.id));
+
+  refreshAllData();
+}
+
+function refreshAllData(){
+  updateFleetStats();
+  renderUPS();
+  renderManageUPSList();
+  renderUPSSelector();
+  filterBat(document.querySelector('.filter-btn.fa')||document.querySelector('.filter-btn'),'all');
+  renderCost();
+}
+
+// ─── INITIAL RENDERING & HELPERS ──────────────────────────────────────────
+function goField(){
+  tab('fieldentry',document.querySelectorAll('.nb')[7]);
+  if(selectedBatId){
+    const b=batteries.find(x=>x.id===selectedBatId);
+    if(b) selectUPS(b.ups);
+  }
+}
+
+function filterBat(btn,filter){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('fa'));
+  btn.classList.add('fa');
+  let data=batteries;
+  if(filter==='critical') data=batteries.filter(b=>b.bhi<50);
+  else if(filter==='vrla') data=batteries.filter(b=>b.type==='VRLA');
+  else if(filter==='liion') data=batteries.filter(b=>b.type==='Li-Ion');
+  else if(filter==='ss01') data=batteries.filter(b=>b.loc==='SS-01');
+  else if(filter==='ss02') data=batteries.filter(b=>b.loc==='SS-02');
+  else if(filter==='ss03') data=batteries.filter(b=>b.loc==='SS-03');
+  const cc={'t1':'bt1','t2':'bt2','t3':'bt3'};
+  document.getElementById('bat-rows').innerHTML=data.map(b=>`
+    <div class="brow" onclick="showDetail('${b.id}')">
+      <span class="sdot ${b.bhi>=75?'good-d':b.bhi>=50?'warn-d':'bad-d'}"></span>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:600;">${b.id} &nbsp;<span class="badge ${cc[b.crit]}">${b.crit.toUpperCase()}</span></div>
+        <div style="font-size:10px;color:#6b7280;margin-top:1px;">${b.loc} · ${b.ups} · ${b.type}</div>
+      </div>
+      <div style="text-align:right;margin-right:8px;">
+        <div style="font-size:13px;font-weight:600;color:${sC(b.bhi)}">${b.bhi}</div>
+        <div class="hbw"><div class="hb" style="width:${b.bhi}%;background:${sC(b.bhi)};"></div></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('bat-detail').style.display='none';
+}
+
+function showDetail(id){
+  selectedBatId=id;
+  const b=batteries.find(x=>x.id===id); if(!b) return;
+  const {bhi,breakdown}=calcBHI(b.volt,b.cells,b.type,b.ir,b.iCurrent,b.temp,0);
+  document.getElementById('bat-detail').style.display='block';
+  document.getElementById('det-title').textContent=`${b.id} — ${b.loc} · ${b.type}`;
+  const params=[
+    {lbl:'Voltage',score:breakdown.voltage,note:`${b.volt}V`},
+    {lbl:'Resistance',score:breakdown.ir,note:`${b.ir}mΩ`},
+    {lbl:'Current',score:breakdown.current,note:`${b.iCurrent}mA`},
+    {lbl:'Temp',score:breakdown.temp,note:`${b.temp}°C`},
+  ];
+  document.getElementById('det-bhi').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+      <div class="bhi-ring">
+        ${bhiRing(bhi,80)}
+        <div class="ring-label"><div class="bhi-score" style="color:${sC(bhi)}">${bhi}</div><div class="bhi-tag">${bhiLabel(bhi)}</div></div>
+      </div>
+      <div style="flex:1;min-width:140px;">
+        ${params.map(p=>`
+          <div class="bhi-bar-row">
+            <div class="bhi-bar-lbl">${p.lbl}</div>
+            <div class="bhi-bar-wrap"><div class="bhi-bar-fill" style="width:${p.score}%;background:${sC(p.score)};"></div></div>
+            <div class="bhi-bar-val" style="color:${sC(p.score)}">${p.score}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="vgrid">
+      ${[{l:'Voltage',v:b.volt+' V'},{l:'Float current',v:b.iCurrent+' mA'},{l:'Int. resistance',v:b.ir+' mΩ'},{l:'Surface temp',v:b.temp+'°C'},{l:'Cycles',v:b.cycles},{l:'Last maint.',v:b.lastMaint}].map(x=>`<div class="vbox"><div class="vval">${x.v}</div><div class="vlbl">${x.l}</div></div>`).join('')}
+    </div>`;
+  document.getElementById('bat-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderUPS(){
+  const cl={t1:'<span class="badge bt1">T1 — Critical</span>',t2:'<span class="badge bt2">T2 — Essential</span>',t3:'<span class="badge bt3">T3 — Aux</span>'};
+  document.getElementById('ups-rows').innerHTML=upsData.map(u=>{
+    const bats=u.bats.map(bid=>batteries.find(b=>b.id===bid)).filter(Boolean);
+    const avg=bats.length ? Math.round(bats.reduce((s,b)=>s+b.bhi,0)/bats.length) : 0;
+    return `<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div><div style="font-size:13px;font-weight:600;">${u.id} &nbsp;${cl[u.crit]}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px;">${u.loc} · ${u.load}</div></div>
+        <div style="text-align:right;"><div style="font-size:16px;font-weight:600;color:${sC(avg)}">${avg}</div><div style="font-size:9px;color:#9ca3af;">Avg BHI</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;">
+        <div class="vbox"><div class="vval">${u.kva} kVA</div><div class="vlbl">Cap.</div></div>
+        <div class="vbox"><div class="vval" style="color:${u.runtime<30?'#e24b4a':'#1d9e75'}">${u.runtime}m</div><div class="vlbl">Backup</div></div>
+        <div class="vbox"><div class="vval">${u.bats.length}</div><div class="vlbl">Strings</div></div>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          ${bats.map(b=>`<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#f9fafb;color:${sC(b.bhi)};border:0.5px solid #e5e7eb;">${b.id} · ${b.bhi}</span>`).join('')}
+        </div>
+        <button class="btn-sec" style="font-size:10px;padding:3px 8px;" onclick="tab('manageups', document.querySelectorAll('.nb')[3]); editUPSStation('${u.id}')">⚙️ Manage</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMaintenance(){
+  document.getElementById('maint-rows').innerHTML=maintSchedule.map(m=>{
+    const sc=m.status==='over'?{c:'#a32d2d',bg:'#fcebeb',label:'Overdue'}:m.status==='due'?{c:'#854f0b',bg:'#faeeda',label:'Due'}:{c:'#0f6e56',bg:'#e1f5ee',label:'OK'};
+    return `<div class="mrow" style="border-left:3px solid ${sc.c};">
+      <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${m.bat} &nbsp;<span class="badge ${m.crit==='t1'?'bt1':'bt2'}">${m.crit.toUpperCase()}</span></div>
+      <div style="font-size:10px;color:#6b7280;margin-top:2px;">${m.loc} · ${m.note}</div></div>
+      <div style="text-align:right;"><div style="font-size:10px;padding:2px 6px;border-radius:3px;background:${sc.bg};color:${sc.c};font-weight:500;">${sc.label}</div>
+      <div style="font-size:9px;color:#9ca3af;margin-top:2px;">${m.due}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderRealloc(){
+  document.getElementById('realloc-rows').innerHTML=reallocs.map(r=>`
+    <div class="rrow" style="border-left-color:${r.priority==='high'?'#e24b4a':'#ba7517'};">
+      <div style="flex:1;"><div style="font-size:12px;font-weight:600;">Move ${r.from}</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:2px;">→ ${r.to}</div>
+      <div style="font-size:10px;color:#9ca3af;margin-top:2px;">${r.reason}</div></div>
+      <span style="font-size:9px;padding:2px 6px;border-radius:3px;background:${r.priority==='high'?'#fcebeb':'#faeeda'};color:${r.priority==='high'?'#a32d2d':'#854f0b'};font-weight:500;">${r.priority.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+function renderCost(){
+  let totR=0,totL=0,totT=0;
+  document.getElementById('costBody').innerHTML=costData.map((d,i)=>{
+    const r=calcRow(d); totR+=r.replCost; totL+=r.laborCost; totT+=r.replCost+r.laborCost;
+    return `<tr><td style="font-weight:600">${d.id}</td><td>${d.ss}</td>
+      <td>${d.type}</td>
+      <td><input class="cinp" type="number" value="${d.unitCost}" onchange="costData[${i}].unitCost=+this.value;renderCost();renderCostCharts()"/></td>
+      <td><input class="cinp" type="number" value="${d.repl}" min="0" style="width:40px" onchange="costData[${i}].repl=+this.value;renderCost();renderCostCharts()"/></td>
+      <td style="font-weight:500;">${fmt(r.replCost)}</td>
+      <td><input class="cinp" type="number" value="${d.visits}" min="0" style="width:40px" onchange="costData[${i}].visits=+this.value;renderCost();renderCostCharts()"/></td>
+      <td><input class="cinp" type="number" value="${d.labor}" onchange="costData[${i}].labor=+this.value;renderCost();renderCostCharts()"/></td>
+      <td>${fmt(r.laborCost)}</td>
+      <td style="font-weight:600;color:#0f6e56;background:#eaf3de;">${fmt(r.replCost+r.laborCost)}</td></tr>`;
+  }).join('');
+  document.getElementById('totR').textContent=fmt(totR);
+  document.getElementById('totL').textContent=fmt(totL);
+  document.getElementById('totT').textContent=fmt(totT);
+}
+
+function renderCostCharts(){
+  if(cChart) cChart.destroy(); if(bChart) bChart.destroy();
+  const bySSMap={};
+  costData.forEach(d=>{const r=calcRow(d);bySSMap[d.ss]=(bySSMap[d.ss]||0)+r.replCost+r.laborCost;});
+  const ssL=Object.keys(bySSMap);
+  cChart=new Chart(document.getElementById('costChart').getContext('2d'),{
+    type:'bar',data:{labels:ssL,datasets:[{data:ssL.map(k=>bySSMap[k]),backgroundColor:['#1d9e75','#e24b4a','#1d9e75'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K'}}}}
+  });
+  const bubbles=costData.map(d=>({x:d.bhi,y:calcRow(d).replCost+calcRow(d).laborCost,r:Math.max(4,d.repl*6+4),label:d.id}));
+  bChart=new Chart(document.getElementById('bubbleChart').getContext('2d'),{
+    type:'bubble',
+    data:{datasets:[{data:bubbles,backgroundColor:bubbles.map(b=>b.x>=75?'rgba(29,158,117,0.5)':b.x>=50?'rgba(186,117,23,0.5)':'rgba(226,75,74,0.5)'),borderColor:bubbles.map(b=>sC(b.x)),borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{min:20,max:100,title:{display:true,text:'BHI',font:{size:10}}},y:{ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K'}}}}
+  });
+}
+
+function renderUPSSelector(){
+  document.getElementById('ups-selector').innerHTML=upsData.map(u=>{
+    const bats=u.bats.map(bid=>batteries.find(b=>b.id===bid)).filter(Boolean);
+    const avg=bats.length ? Math.round(bats.reduce((s,b)=>s+b.bhi,0)/bats.length) : 0;
+    return `<div class="ups-sel-card" id="usc-${u.id}" onclick="selectUPS('${u.id}')">
+      <div style="font-weight:600;font-size:12px;">${u.id}</div>
+      <div style="font-size:11px;color:${sC(avg)};font-weight:600;margin-top:2px;">BHI ${avg}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectUPS(upsId){
+  document.querySelectorAll('.ups-sel-card').forEach(c=>c.classList.remove('selected'));
+  const card=document.getElementById('usc-'+upsId);
+  if(card) card.classList.add('selected');
+  selectedUPS=upsId;
+  buildBatchTable(upsId);
+  document.getElementById('step3').style.display='block';
+  document.getElementById('step4').style.display='block';
+  document.getElementById('step3-ups-label').textContent=upsId;
+  document.getElementById('summary-ups').textContent=upsId;
+  document.getElementById('step3').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function buildBatchTable(upsId){
+  const u=upsData.find(x=>x.id===upsId); if(!u) return;
+  const bats=u.bats.map(bid=>batteries.find(b=>b.id===bid)).filter(Boolean);
+  document.getElementById('batchBody').innerHTML=bats.map(b=>`
+    <tr id="btr-${b.id}">
+      <td><div style="font-weight:600;font-size:12px;">${b.id}</div></td>
+      <td style="text-align:center;"><span style="font-size:9px;padding:2px 4px;border-radius:3px;background:#e1f5ee;color:#0f6e56;">${b.type}</span></td>
+      <td><input class="binp" id="inp-volt-${b.id}" type="number" step="0.01" placeholder="${b.volt}" oninput="updateLiveBHI('${b.id}')"/></td>
+      <td><input class="binp" id="inp-curr-${b.id}" type="number" step="1" placeholder="${b.iCurrent}" oninput="updateLiveBHI('${b.id}')"/></td>
+      <td><input class="binp" id="inp-ir-${b.id}" type="number" step="0.1" placeholder="${b.ir}" oninput="updateLiveBHI('${b.id}')"/></td>
+      <td><input class="binp" id="inp-temp-${b.id}" type="number" step="0.5" placeholder="${b.temp}" oninput="updateLiveBHI('${b.id}')"/></td>
+      <td>
+        <div class="vis-checks">
+          <label class="vis-check"><input type="checkbox" id="vis-swell-${b.id}" onchange="updateLiveBHI('${b.id}')"> Swelling</label>
+          <label class="vis-check"><input type="checkbox" id="vis-corr-${b.id}" onchange="updateLiveBHI('${b.id}')"> Corrosion</label>
+          <label class="vis-check"><input type="checkbox" id="vis-leak-${b.id}" onchange="updateLiveBHI('${b.id}')"> Leakage</label>
+        </div>
+      </td>
+      <td>
+        <div class="bhi-ring" style="width:50px;height:50px;margin:0 auto;" id="ring-${b.id}">
+          ${bhiRing(b.bhi,50)}
+          <div class="ring-label"><div style="font-size:12px;font-weight:700;line-height:1;color:${sC(b.bhi)}">${b.bhi}</div></div>
+        </div>
+      </td>
+    </tr>`).join('');
+  updateBHISummary(upsId);
+}
+
+function getInputVal(id, fallback){ const el=document.getElementById(id); return el&&el.value!==''?+el.value:fallback; }
+
+function updateLiveBHI(batId){
+  const b=batteries.find(x=>x.id===batId); if(!b) return;
+  const volt=getInputVal('inp-volt-'+batId, b.volt);
+  const curr=getInputVal('inp-curr-'+batId, b.iCurrent);
+  const ir=getInputVal('inp-ir-'+batId, b.ir);
+  const temp=getInputVal('inp-temp-'+batId, b.temp);
+  const visPenalty=[document.getElementById('vis-swell-'+batId),document.getElementById('vis-corr-'+batId),document.getElementById('vis-leak-'+batId)].filter(el=>el&&el.checked).length;
+  const {bhi}=calcBHI(volt,b.cells,b.type,ir,curr,temp,visPenalty);
+
+  const ringEl=document.getElementById('ring-'+batId);
+  if(ringEl) ringEl.innerHTML=`${bhiRing(bhi,50)}<div class="ring-label"><div style="font-size:12px;font-weight:700;line-height:1;color:${sC(bhi)}">${bhi}</div></div>`;
+  if(selectedUPS) updateBHISummary(selectedUPS);
+}
+
+function updateBHISummary(upsId){
+  const u=upsData.find(x=>x.id===upsId); if(!u) return;
+  const bats=u.bats.map(bid=>batteries.find(b=>b.id===bid)).filter(Boolean);
+  document.getElementById('bhi-summary-rows').innerHTML=bats.map(b=>{
+    const volt=getInputVal('inp-volt-'+b.id, b.volt);
+    const curr=getInputVal('inp-curr-'+b.id, b.iCurrent);
+    const ir=getInputVal('inp-ir-'+b.id, b.ir);
+    const temp=getInputVal('inp-temp-'+b.id, b.temp);
+    const visPenalty=[document.getElementById('vis-swell-'+b.id),document.getElementById('vis-corr-'+b.id),document.getElementById('vis-leak-'+b.id)].filter(el=>el&&el.checked).length;
+    const {bhi}=calcBHI(volt,b.cells,b.type,ir,curr,temp,visPenalty);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px;background:#fff;border-radius:4px;margin-bottom:4px;border-left:3px solid ${sC(bhi)}; font-size:11px;">
+      <span style="font-weight:600;min-width:40px;">${b.id}</span>
+      <div style="flex:1;height:5px;background:#e5e7eb;border-radius:3px;"><div style="width:${bhi}%;height:100%;background:${sC(bhi)};border-radius:3px;"></div></div>
+      <span style="font-size:12px;font-weight:700;color:${sC(bhi)};min-width:24px;text-align:right;">${bhi}</span>
+    </div>`;
+  }).join('');
+}
+
+function submitBatch(){
+  const alertEl=document.getElementById('f-alert');
+  alertEl.style.display='none';
+  const tech=document.getElementById('f-tech').value;
+  const date=document.getElementById('f-date').value;
+  if(!tech||!selectedUPS){alertEl.textContent='Please fill Technician name and select a UPS.';alertEl.style.display='block';return;}
+  const u=upsData.find(x=>x.id===selectedUPS); if(!u) return;
+  const bats=u.bats.map(bid=>batteries.find(b=>b.id===bid)).filter(Boolean);
+  const type=document.getElementById('f-type').value;
+  const charger=document.getElementById('f-charger').value;
+  bats.forEach(b=>{
+    const volt=getInputVal('inp-volt-'+b.id, b.volt);
+    const curr=getInputVal('inp-curr-'+b.id, b.iCurrent);
+    const ir=getInputVal('inp-ir-'+b.id, b.ir);
+    const temp=getInputVal('inp-temp-'+b.id, b.temp);
+    const swell=document.getElementById('vis-swell-'+b.id)?.checked||false;
+    const corr=document.getElementById('vis-corr-'+b.id)?.checked||false;
+    const leak=document.getElementById('vis-leak-'+b.id)?.checked||false;
+    const visPenalty=[swell,corr,leak].filter(Boolean).length;
+    const {bhi}=calcBHI(volt,b.cells,b.type,ir,curr,temp,visPenalty);
+    const visNote=[swell?'Swelling':'',corr?'Corrosion':'',leak?'Leakage':''].filter(Boolean).join(', ')||'No issues';
+    maintenanceLog.unshift({
+      date,batteryId:b.id,substation:batLocFull[b.loc]||b.loc,ups:b.ups,
+      technician:tech,type,chargerVolt:charger,
+      voltage:volt,floatCurrent:curr,intResistance:ir,surfaceTemp:temp,
+      visualResult:visNote,bhi,
+    });
+    b.volt=volt; b.iCurrent=curr; b.ir=ir; b.temp=temp; b.bhi=bhi; b.lastMaint=date;
+  });
+  document.getElementById('formSuccess').style.display='block';
+  setTimeout(()=>document.getElementById('formSuccess').style.display='none',4000);
+  document.getElementById('f-tech').value='';
+  refreshAllData();
+  renderLog();
+}
+
+function renderLog(){
+  document.getElementById('logCount').textContent=maintenanceLog.length+' entr'+(maintenanceLog.length===1?'y':'ies');
+  if(!maintenanceLog.length){document.getElementById('logContainer').innerHTML='<p style="font-size:12px;color:#6b7280;padding:8px 0;">No entries yet.</p>';return;}
+  document.getElementById('logContainer').innerHTML=`<table class="log-table"><thead><tr>
+    <th>Date</th><th>Battery</th><th>UPS</th><th>Tech</th><th>Type</th>
+    <th>Volt</th><th>Current</th><th>IR</th><th>Temp</th><th>Visual</th><th style="background:#0f6e56;">BHI</th>
+  </tr></thead><tbody>
+  ${maintenanceLog.map(e=>`<tr>
+    <td>${e.date}</td><td style="font-weight:600">${e.batteryId}</td><td>${e.ups}</td>
+    <td>${e.technician}</td><td>${e.type}</td>
+    <td>${e.voltage}V</td><td>${e.floatCurrent}mA</td><td>${e.intResistance}mΩ</td><td>${e.surfaceTemp}°C</td>
+    <td style="font-size:10px;">${e.visualResult}</td>
+    <td style="font-weight:700;color:${sC(e.bhi)};">${e.bhi}</td>
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function dlCSV(rows,name){
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download=name;a.click();
+}
+function exportCostCSV(){
+  const rows=[['Battery ID','Substation','Type','Unit Cost','Replacements','Repl. Cost','Maint. Visits','Labor/Visit','Total Labor','Total Cost']];
+  costData.forEach(d=>{const r=calcRow(d);rows.push([d.id,d.ss,d.type,d.unitCost,d.repl,r.replCost,d.visits,d.labor,r.laborCost,r.replCost+r.laborCost]);});
+  dlCSV(rows,'TataSteel_CostTracking.csv');
+}
+function exportLogCSV(){
+  if(!maintenanceLog.length){alert('No log entries yet.');return;}
+  const keys=Object.keys(maintenanceLog[0]);
+  dlCSV([keys,...maintenanceLog.map(e=>keys.map(k=>e[k]||''))],'TataSteel_MaintenanceLog.csv');
+}
+function exportFullXLSX(){
+  const wb=XLSX.utils.book_new();
+  const fh=['Battery ID','Substation','UPS','Type','Criticality','BHI','Voltage (V)','Float Current (mA)','Int. Res. (mΩ)','Surface Temp (°C)','Cycles','Last Maint.','Next Due','Status'];
+  const fr=batteries.map(b=>[b.id,batLocFull[b.loc]||b.loc,b.ups,b.type,b.crit.toUpperCase(),b.bhi,b.volt,b.iCurrent,b.ir,b.temp,b.cycles,b.lastMaint,b.nextDue,bhiLabel(b.bhi)]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([fh,...fr]),'Battery Fleet Register');
+  
+  const uh=['UPS ID','Substation','Connected Load','Capacity (kVA)','Tier','Backup Time (m)','Connected Batteries'];
+  const ur=upsData.map(u=>[u.id,u.loc,u.load,u.kva,u.crit.toUpperCase(),u.runtime,u.bats.join(', ')]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([uh,...ur]),'UPS Fleet Register');
+  
+  XLSX.writeFile(wb,'TataSteel_BMS_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+// CHARTS INIT
+document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+new Chart(document.getElementById('sohChart').getContext('2d'),{
+  type:'bar',data:{labels:['SS-01','SS-02','SS-03'],
+  datasets:[{data:[82,60,79],backgroundColor:['#1d9e75','#e24b4a','#1d9e75'],borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}
+});
+new Chart(document.getElementById('distChart').getContext('2d'),{
+  type:'doughnut',data:{labels:['Good','Fair','Poor'],
+  datasets:[{data:[25,15,7],backgroundColor:['#1d9e75','#ba7517','#e24b4a'],borderWidth:0}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{boxWidth:8,font:{size:10}}}}}
+});
+new Chart(document.getElementById('trendChart').getContext('2d'),{
+  type:'line',data:{labels:['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'],
+  datasets:[{data:[84,83,82,81,80,79,79,78,78,77,77,74],borderColor:'#1d9e75',backgroundColor:'rgba(29,158,117,0.07)',fill:true,tension:0.4,pointRadius:1}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:65,max:90}}}
+});
+
+// INIT
+refreshAllData();
+renderMaintenance(); renderRealloc(); renderLog();
+</script>
+</body>
+</html>
